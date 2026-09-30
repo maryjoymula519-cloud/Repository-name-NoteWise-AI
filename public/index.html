@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NoteWise AI turns meeting and lecture notes into clear summaries and actionable tasks." />
+  <title>NoteWise AI — Smart Notes, Clear Actions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    const savedTheme = localStorage.getItem('notewise_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <div><strong>NoteWise</strong><span>AI Summarizer</span></div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="summarizer"><span>✦</span> Summarizer</button>
+        <button class="nav-item" data-view="history"><span>◷</span> History <b id="historyCount">0</b></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="tip-card">
+          <span class="tip-icon">✎</span>
+          <strong>Make notes work harder.</strong>
+          <p>Paste a transcript, meeting notes, or lecture content and let AI organize the important parts.</p>
+        </div>
+        <div class="status"><span class="status-dot" id="statusDot"></span><span id="statusText">Checking AI service…</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+        <div class="breadcrumb">Workspace <span>/</span> <strong id="pageTitle">Summarizer</strong></div>
+        <div class="top-actions">
+          <button id="themeToggle" class="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">
+            <span class="icon-moon">☽</span>
+            <span class="icon-sun hidden">☀</span>
+          </button>
+          <span class="date-label" id="todayLabel"></span>
+        </div>
+      </header>
+
+      <section class="content" id="summarizerView">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">AI-POWERED NOTE TAKING</span>
+            <h1>Turn long notes into<br><em>clear next steps.</em></h1>
+            <p>Paste your meeting transcript or lecture notes. NoteWise AI will identify the summary, key points, action items, and important topics.</p>
+          </div>
+          <div class="hero-badge"><span>✦</span><div><strong>Gemini AI</strong><small>Real-time processing</small></div></div>
+        </div>
+
+        <div class="workspace-grid">
+          <section class="card input-card">
+            <div class="card-header">
+              <div><span class="step">01</span><div><h2>Your notes</h2><p>Paste your transcript or lecture notes below.</p></div></div>
+              <button class="ghost-btn" id="clearBtn">Clear</button>
+            </div>
+            <textarea id="notesInput" maxlength="50000" placeholder="Paste your meeting or lecture notes here…\n\nExample:\nThe team meeting started at 9:00 AM. Maria will prepare the presentation by Friday. John will contact the client tomorrow. The group agreed to move the deadline to October 10..."></textarea>
+            <div class="input-footer"><span id="wordCount">0 words</span><span id="charCount">0 / 50,000</span></div>
+            <button class="primary-btn" id="summarizeBtn"><span>✦</span> Summarize with AI <kbd>Ctrl ↵</kbd></button>
+            <p class="privacy-note">Your notes are sent to the configured AI service only when you click the button.</p>
+          </section>
+
+          <section class="card result-card" id="resultCard">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon">✦</div>
+              <h2>Your AI summary will appear here</h2>
+              <p>Submit your notes to generate a concise summary, key points, and action items.</p>
+              <div class="mini-flow"><span>Paste</span><i>→</i><span>AI analyzes</span><i>→</i><span>Review</span></div>
+            </div>
+            <div class="loading-state hidden" id="loadingState">
+              <div class="loader-orb">✦</div><h2>Analyzing your notes…</h2><p>NoteWise is identifying the most useful information.</p>
+              <div class="skeleton long"></div><div class="skeleton medium"></div><div class="skeleton short"></div>
+            </div>
+            <div class="results hidden" id="results">
+              <div class="result-top"><div><span class="step">02</span><h2>AI results</h2></div><div class="result-actions"><button class="icon-btn" id="copyBtn" title="Copy results">⧉</button><button class="icon-btn" id="downloadBtn" title="Download as text">↓</button><button class="icon-btn" id="newBtn" title="Start new summary">＋</button></div></div>
+              <div class="summary-panel"><div class="section-label">SUMMARY</div><p id="summaryText"></p></div>
+              <div class="result-section"><div class="section-label">KEY POINTS</div><ul id="keyPoints"></ul></div>
+              <div class="result-section"><div class="section-label">ACTION ITEMS</div><div class="actions-table" id="actionItems"></div></div>
+              <div class="result-section"><div class="section-label">IMPORTANT TOPICS</div><div class="tags" id="topics"></div></div>
+              <div class="saved-note" id="savedNote">✓ Saved to browser history</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="content hidden" id="historyView">
+        <div class="page-heading"><span class="eyebrow">YOUR WORKSPACE</span><h1>Summary history</h1><p>Your recent AI-generated summaries are stored locally in this browser.</p></div>
+        <div class="history-toolbar"><span id="historyMeta">0 saved summaries</span><button class="ghost-btn danger" id="clearHistoryBtn">Clear history</button></div>
+        <div class="history-list" id="historyList"></div>
+        <div class="history-empty hidden" id="historyEmpty"><div class="empty-icon">◷</div><h2>No saved summaries yet</h2><p>Generate your first summary and it will appear here.</p><button class="primary-btn small" id="goSummarizerBtn">Create a summary</button></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
