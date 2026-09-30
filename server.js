@@ -141,9 +141,38 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     service: 'NoteWise AI',
     aiConfigured: Boolean(ai),
+    fallbackConfigured: Boolean(process.env.FALLBACK_API_KEY),
     model: MODEL
   });
 });
+
+async function callFallbackProvider(prompt) {
+  const fallbackKey = process.env.FALLBACK_API_KEY;
+  const fallbackUrl = process.env.FALLBACK_API_URL || 'https://api.openai.com/v1/chat/completions';
+  const fallbackModel = process.env.FALLBACK_MODEL || 'gpt-4o-mini';
+
+  const response = await fetch(fallbackUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${fallbackKey}`
+    },
+    body: JSON.stringify({
+      model: fallbackModel,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+      temperature: 0.2
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Fallback API failed with status ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
 
 app.post('/api/summarize', async (req, res) => {
   try {
@@ -213,6 +242,25 @@ ${notes}`;
           console.warn(
             '[Gemini API] 429 quota/rate limit reached. No additional retries.'
           );
+
+          if (process.env.FALLBACK_API_KEY) {
+            console.warn('[Fallback API] Attempting to use fallback provider...');
+            try {
+              const fallbackResponseText = await callFallbackProvider(prompt);
+              
+              const result = validateResult(
+                parseJson(fallbackResponseText || '{}')
+              );
+
+              return res.json({
+                result,
+                model: process.env.FALLBACK_MODEL || 'gpt-4o-mini (fallback)'
+              });
+            } catch (fallbackErr) {
+              console.error('Fallback API error:', fallbackErr);
+              // Fall through to return 429 if fallback also fails
+            }
+          }
 
           return res.status(429).json({
             error:

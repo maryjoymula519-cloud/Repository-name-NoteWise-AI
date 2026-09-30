@@ -39,6 +39,9 @@ Create a Web Service connected to this repository.
 - Start Command: `npm start`
 - Environment Variable: `GEMINI_API_KEY` = your key
 - Environment Variable: `GEMINI_MODEL` = `gemini-3.8-flash`
+- *(Optional)* Environment Variable: `FALLBACK_API_KEY` = your fallback provider API key
+- *(Optional)* Environment Variable: `FALLBACK_MODEL` = e.g., `gpt-4o-mini`
+- *(Optional)* Environment Variable: `FALLBACK_API_URL` = e.g., `https://api.openai.com/v1/chat/completions`
 
 The app listens on the `PORT` environment variable and `0.0.0.0`, as required for a public Render web service.
 
