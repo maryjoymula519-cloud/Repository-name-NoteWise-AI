@@ -216,7 +216,7 @@ ${notes}`;
 
           return res.status(429).json({
             error:
-              'The Gemini AI quota has been reached. Please wait and try again later.'
+              'The AI service has temporarily reached its usage limit. Please try again later.'
           });
         }
 
@@ -259,7 +259,7 @@ ${notes}`;
     if (isQuotaError(error)) {
       return res.status(429).json({
         error:
-          'The Gemini AI quota has been reached. Please wait and try again later.'
+          'The AI service has temporarily reached its usage limit. Please try again later.'
       });
     }
 
