@@ -48,6 +48,7 @@
         </div>
       </header>
 
+      <!-- ═══════════════════════════════════════════════════ SUMMARIZER VIEW -->
       <section class="content" id="summarizerView">
         <div class="hero">
           <div>
@@ -59,17 +60,32 @@
         </div>
 
         <div class="workspace-grid">
+
+          <!-- INPUT CARD -->
           <section class="card input-card">
             <div class="card-header">
               <div><span class="step">01</span><div><h2>Your notes</h2><p>Paste your transcript or lecture notes below.</p></div></div>
               <button class="ghost-btn" id="clearBtn">Clear</button>
             </div>
-            <textarea id="notesInput" maxlength="50000" placeholder="Paste your meeting or lecture notes here…\n\nExample:\nThe team meeting started at 9:00 AM. Maria will prepare the presentation by Friday. John will contact the client tomorrow. The group agreed to move the deadline to October 10..."></textarea>
-            <div class="input-footer"><span id="wordCount">0 words</span><span id="charCount">0 / 50,000</span></div>
+
+            <!-- FEATURE 1: NOTE TITLE -->
+            <label class="field-label" for="noteTitle">Note Title</label>
+            <input type="text" id="noteTitle" class="title-input" placeholder="Enter a title for your note...">
+
+            <!-- NOTES TEXTAREA -->
+            <textarea id="notesInput" maxlength="50000" placeholder="Paste your meeting or lecture notes here...&#10;&#10;Example:&#10;The team meeting started at 9:00 AM. Maria will prepare the presentation by Friday. John will contact the client tomorrow. The group agreed to move the deadline to October 10..."></textarea>
+
+            <!-- FEATURE 4: WORD & CHARACTER COUNTER -->
+            <div class="input-footer">
+              <span id="wordCount">0 words</span>
+              <span id="charCount">0 / 50,000</span>
+            </div>
+
             <button class="primary-btn" id="summarizeBtn"><span>✦</span> Summarize with AI <kbd>Ctrl ↵</kbd></button>
             <p class="privacy-note">Your notes are sent to the configured AI service only when you click the button.</p>
           </section>
 
+          <!-- RESULT CARD -->
           <section class="card result-card" id="resultCard">
             <div class="empty-state" id="emptyState">
               <div class="empty-icon">✦</div>
@@ -78,11 +94,19 @@
               <div class="mini-flow"><span>Paste</span><i>→</i><span>AI analyzes</span><i>→</i><span>Review</span></div>
             </div>
             <div class="loading-state hidden" id="loadingState">
-              <div class="loader-orb">✦</div><h2>Analyzing your notes…</h2><p>NoteWise is identifying the most useful information.</p>
+              <div class="loader-orb">✦</div><h2>Gemini AI is processing...</h2><p>NoteWise is identifying the most useful information from your notes.</p>
               <div class="skeleton long"></div><div class="skeleton medium"></div><div class="skeleton short"></div>
             </div>
             <div class="results hidden" id="results">
-              <div class="result-top"><div><span class="step">02</span><h2>AI results</h2></div><div class="result-actions"><button class="icon-btn" id="copyBtn" title="Copy results">⧉</button><button class="icon-btn" id="downloadBtn" title="Download as text">↓</button><button class="icon-btn" id="newBtn" title="Start new summary">＋</button></div></div>
+              <div class="result-top">
+                <div><span class="step">02</span><h2>AI results</h2></div>
+                <div class="result-actions">
+                  <!-- FEATURE 5: COPY ALL RESULTS -->
+                  <button class="copy-all-btn" id="copyBtn">⧉ Copy All Results</button>
+                  <button class="icon-btn" id="downloadBtn" title="Download as text">↓</button>
+                  <button class="icon-btn" id="newBtn" title="Start new summary">＋</button>
+                </div>
+              </div>
               <div class="summary-panel"><div class="section-label">SUMMARY</div><p id="summaryText"></p></div>
               <div class="result-section"><div class="section-label">KEY POINTS</div><ul id="keyPoints"></ul></div>
               <div class="result-section"><div class="section-label">ACTION ITEMS</div><div class="actions-table" id="actionItems"></div></div>
@@ -90,14 +114,33 @@
               <div class="saved-note" id="savedNote">✓ Saved to browser history</div>
             </div>
           </section>
+
         </div>
       </section>
 
+      <!-- ═══════════════════════════════════════════════════ HISTORY VIEW -->
       <section class="content hidden" id="historyView">
-        <div class="page-heading"><span class="eyebrow">YOUR WORKSPACE</span><h1>Summary history</h1><p>Your recent AI-generated summaries are stored locally in this browser.</p></div>
-        <div class="history-toolbar"><span id="historyMeta">0 saved summaries</span><button class="ghost-btn danger" id="clearHistoryBtn">Clear history</button></div>
+        <div class="page-heading">
+          <span class="eyebrow">YOUR WORKSPACE</span>
+          <h1>Summary history</h1>
+          <p>Your recent AI-generated summaries are stored locally in this browser.</p>
+        </div>
+
+        <!-- FEATURE 2: SEARCH HISTORY -->
+        <div class="history-toolbar">
+          <span id="historyMeta">0 saved summaries</span>
+          <input type="text" id="historySearch" class="search-input" placeholder="Search your saved notes...">
+          <button class="ghost-btn danger" id="clearHistoryBtn">Clear history</button>
+        </div>
+
+        <!-- FEATURE 3: HISTORY LIST (Open | Edit | Delete rendered by JS) -->
         <div class="history-list" id="historyList"></div>
-        <div class="history-empty hidden" id="historyEmpty"><div class="empty-icon">◷</div><h2>No saved summaries yet</h2><p>Generate your first summary and it will appear here.</p><button class="primary-btn small" id="goSummarizerBtn">Create a summary</button></div>
+        <div class="history-empty hidden" id="historyEmpty">
+          <div class="empty-icon">◷</div>
+          <h2>No saved notes yet.</h2>
+          <p>Generate your first summary and it will appear here.</p>
+          <button class="primary-btn small" id="goSummarizerBtn">Create a summary</button>
+        </div>
       </section>
     </main>
   </div>
