@@ -2,6 +2,14 @@
 const $ = (id) => document.getElementById(id);
 const notesInput   = $('notesInput');
 const summarizeBtn = $('summarizeBtn');
+
+const imageInput = $('imageInput');
+const imageUploadBtn = $('imageUploadBtn');
+const imagePreviewContainer = $('imagePreviewContainer');
+const imagePreview = $('imagePreview');
+const removeImageBtn = $('removeImageBtn');
+const summarizeImageBtn = $('summarizeImageBtn');
+
 const emptyState   = $('emptyState');
 const loadingState = $('loadingState');
 const results      = $('results');
@@ -222,6 +230,96 @@ notesInput.addEventListener('input', updateCounts);
 
 // Summarize
 summarizeBtn.addEventListener('click', summarize);
+
+// PHOTO SUMMARIZER
+imageUploadBtn.addEventListener('click', () => {
+  imageInput.click();
+});
+
+imageInput.addEventListener('change', () => {
+  const file = imageInput.files[0];
+
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Image must be smaller than 10 MB.');
+    imageInput.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    imagePreview.src = e.target.result;
+    imagePreviewContainer.classList.remove('hidden');
+    summarizeImageBtn.classList.remove('hidden');
+  };
+
+  reader.readAsDataURL(file);
+});
+
+removeImageBtn.addEventListener('click', () => {
+  imageInput.value = '';
+  imagePreview.src = '';
+  imagePreviewContainer.classList.add('hidden');
+  summarizeImageBtn.classList.add('hidden');
+});
+
+summarizeImageBtn.addEventListener('click', async () => {
+  const file = imageInput.files[0];
+
+  if (!file) {
+    showToast('Please upload a photo first.');
+    return;
+  }
+
+  summarizeImageBtn.disabled = true;
+  summarizeImageBtn.textContent = '✦ Processing Photo...';
+
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const result = reader.result;
+        const base64Data = result.split(',')[1];
+        resolve(base64Data);
+      };
+
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const response = await fetch('/api/summarize-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        imageData: base64,
+        mimeType: file.type
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to summarize the photo.');
+    }
+
+    currentInput = '[Photo of notes]';
+    renderResult(data.result);
+
+    showToast('Photo summarized successfully.');
+
+  } catch (error) {
+    console.error('Photo summarization error:', error);
+    showToast(error.message || 'Unable to summarize the photo.');
+  } finally {
+    summarizeImageBtn.disabled = false;
+    summarizeImageBtn.textContent = '✦ Summarize Photo with AI';
+  }
+});
 
 // Clear notes
 $('clearBtn').addEventListener('click', () => {

@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ai = process.env.GEMINI_API_KEY
@@ -332,6 +332,93 @@ ${notes}`;
   }
 });
 
+
+
+  app.post('/api/summarize-image', async (req, res) => {
+  try {
+    const imageData = cleanText(req.body?.imageData);
+    const mimeType = cleanText(req.body?.mimeType).toLowerCase();
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    if (!imageData) {
+      return res.status(400).json({
+        error: 'No image was provided.'
+      });
+    }
+
+    if (!allowedMimeTypes.includes(mimeType)) {
+      return res.status(400).json({
+        error: 'Unsupported image type. Please use JPG, PNG, or WEBP.'
+      });
+    }
+
+    if (!ai) {
+      return res.status(503).json({
+        error: 'AI service is not configured.'
+      });
+    }
+
+    const imageBuffer = Buffer.from(imageData, 'base64');
+
+    if (imageBuffer.length > 10 * 1024 * 1024) {
+      return res.status(413).json({
+        error: 'Image is too large. Please use an image smaller than 10 MB.'
+      });
+    }
+
+    const prompt = `${SYSTEM_INSTRUCTION}
+
+Read the uploaded image carefully. It contains notes or lecture material.
+
+Create a summary, key points, action items, and important topics based ONLY on information visible in the image.
+
+Do not invent information. If something is unclear or cannot be read, do not guess.`;
+
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [
+        {
+          inlineData: {
+            mimeType,
+            data: imageData
+          }
+        },
+        {
+          text: prompt
+        }
+      ],
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const parsed = parseJson(response?.text || '{}');
+    const result = validateResult(parsed);
+
+    return res.json({
+      result,
+      model: MODEL
+    });
+
+  } catch (error) {
+    console.error('Image summarization error:', error);
+
+    if (isQuotaError(error)) {
+      return res.status(429).json({
+        error: 'The AI service has temporarily reached its usage limit. Please try again later.'
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Unable to summarize the image right now.'
+    });
+  }
+});
 app.get(/.*/, (_req, res) => {
   res.sendFile(
     path.join(__dirname, 'public', 'index.html')
